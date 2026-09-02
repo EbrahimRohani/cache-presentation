@@ -5,3 +5,6 @@
 # React Router
 /.react-router/
 /build/
+
+# Local Codex task queue
+/codex_tasks/

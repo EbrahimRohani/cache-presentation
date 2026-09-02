@@ -10,16 +10,11 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 
-export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
+export const meta: Route.MetaFunction = () => [
+  { title: "Stack Evaluation Presentation" },
   {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    name: "description",
+    content: "A structured comparison of full-stack framework options.",
   },
 ];
 
@@ -62,11 +57,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col justify-center px-6 py-16">
+      <p className="text-sm font-bold tracking-[0.14em] text-accent uppercase">
+        Presentation error
+      </p>
+      <h1 className="mt-3 text-5xl font-semibold tracking-tight text-heading">
+        {message}
+      </h1>
+      <p className="mt-4 text-lg leading-8 text-muted">{details}</p>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="mt-8 w-full overflow-x-auto rounded-xl border border-border bg-surface p-4 text-sm">
           <code>{stack}</code>
         </pre>
       )}

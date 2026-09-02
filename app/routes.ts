@@ -1,3 +1,17 @@
-import { type RouteConfig, index } from "@react-router/dev/routes";
+import {
+  index,
+  layout,
+  route,
+  type RouteConfig,
+} from "@react-router/dev/routes";
 
-export default [index("routes/home.tsx")] satisfies RouteConfig;
+import { presentationSections } from "./presentation/registry";
+
+export default [
+  layout("presentation/layout.tsx", [
+    index("presentation/index.tsx"),
+    ...presentationSections.map(({ id, path }) =>
+      route(path.slice(1), `presentation/${id}/page.tsx`),
+    ),
+  ]),
+] satisfies RouteConfig;
