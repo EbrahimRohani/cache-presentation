@@ -1,4 +1,5 @@
 import { SectionPage } from "../shared/section-page";
+import { TechnologyAdoptionSection } from "./components/technology-adoption/technology-adoption-section";
 
 const researchTracks = [
   {
@@ -43,8 +44,9 @@ export default function EcosystemCredibilityPage() {
           Ecosystem &amp; Credibility
         </h1>
         <p className="mt-5 max-w-4xl text-lg leading-8 text-body sm:text-xl sm:leading-9">
-          Two focused research tracks will establish the ecosystem signals and
-          supporting evidence needed before any conclusions are drawn.
+          Two focused research tracks and an adoption snapshot establish the
+          ecosystem signals and supporting evidence needed before any conclusions
+          are drawn.
         </p>
       </header>
 
@@ -95,6 +97,8 @@ export default function EcosystemCredibilityPage() {
           </li>
         ))}
       </ol>
+
+      <TechnologyAdoptionSection />
     </SectionPage>
   );
 }
