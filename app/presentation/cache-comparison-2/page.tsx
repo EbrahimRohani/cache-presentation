@@ -400,7 +400,7 @@ function RevalidationSlide() {
   return (
     <Slide
       frame={deckFrame(6)}
-      eyebrow="03 Framework Mode default"
+      eyebrow="03 Freshness machinery"
       title="Mutations, revalidation, and prefetch are one story"
       note="React Router keeps the UI synchronized by reloading page data after router-managed writes and by letting likely destinations warm up early."
       footer="Freshness and cache"
@@ -408,8 +408,8 @@ function RevalidationSlide() {
       <div className="grid gap-4 lg:grid-cols-2">
         <DarkCard eyebrow="Framework Mode default" title="Automatic freshness">
           <p className="text-slate-200">
-            With SSR enabled, route loaders are revalidated after every
-            navigation and form submission.
+            With SSR enabled, route loaders revalidate after every navigation
+            and form submission.
           </p>
           <p className="mt-3">
             Client navigation avoids another full HTML document, but it still
@@ -508,6 +508,7 @@ function PublicPolicySlide() {
           {externalCacheLayers.map((layer) => (
             <DarkCard key={layer.title} eyebrow={layer.title} title={layer.title}>
               <p>{layer.description}</p>
+              <p className="sr-only">{layer.examples}</p>
               <TagList tags={layer.examples.split(" · ")} />
             </DarkCard>
           ))}
@@ -516,7 +517,7 @@ function PublicPolicySlide() {
 
       <p className="mt-5 rounded-lg border border-cyan-400/25 bg-cyan-400/10 p-5 text-sm leading-6 text-slate-300">
         Loader/action headers are not automatically forwarded to the final
-        response. If the policy is derived inside a loader, return it from the
+        response. If policy is derived inside a loader, return it from the
         route module <code className="font-mono text-cyan-200">headers</code>{" "}
         export. User-specific responses should normally use{" "}
         <code className="font-mono text-cyan-200">private, no-store</code>.
@@ -589,7 +590,7 @@ function IsrSlide() {
     <Slide
       frame={deckFrame(11)}
       eyebrow="08 Pre-rendering and ISR"
-      title="SSR origin plus CDN stale-while-revalidate"
+      title="SSR origin + CDN stale-while-revalidate"
       note="React Router has no built-in Next-style ISR store."
       footer="ISR-like architecture"
     >
