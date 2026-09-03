@@ -60,7 +60,7 @@ interface SlideProps {
 
 function Slide({ frame, eyebrow, title, subtitle, note, footer, children }: SlideProps) {
   return (
-    <section className="relative isolate min-h-[34rem] overflow-hidden border-b-[7px] border-[#51515a] bg-[#070c13] px-5 py-8 text-[#f4f6fb] sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+    <section className="relative isolate min-h-[34rem] overflow-hidden border-b border-[#2f333c] bg-[#070c13] px-5 py-8 text-[#f4f6fb] sm:px-8 sm:py-10 lg:px-12 lg:py-12">
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-20 bg-[linear-gradient(rgba(75,88,108,.16)_1px,transparent_1px),linear-gradient(90deg,rgba(75,88,108,.16)_1px,transparent_1px)] [background-size:5.35rem_5.35rem]"
@@ -227,7 +227,7 @@ function TagList({ tags }: { readonly tags: readonly string[] }) {
 
 function HeroSlide() {
   return (
-    <section className="relative isolate min-h-[34rem] overflow-hidden border-b-[7px] border-[#51515a] bg-[#070c13] px-5 py-8 text-[#f4f6fb] sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+    <section className="relative isolate min-h-[34rem] overflow-hidden border-b border-[#2f333c] bg-[#070c13] px-5 py-8 text-[#f4f6fb] sm:px-8 sm:py-10 lg:px-12 lg:py-12">
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-20 bg-[linear-gradient(rgba(75,88,108,.16)_1px,transparent_1px),linear-gradient(90deg,rgba(75,88,108,.16)_1px,transparent_1px)] [background-size:5.35rem_5.35rem]"
