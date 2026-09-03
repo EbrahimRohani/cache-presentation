@@ -43,6 +43,12 @@ export const presentationSections = [
     path: "/cache-comparison-2",
   },
   {
+    id: "cache-comparison-3",
+    number: "5.2",
+    title: "Cache Comparison",
+    path: "/cache-comparison-3",
+  },
+  {
     id: "benchmark-analysis",
     number: "6",
     title: "Benchmark & Demo Analysis",
