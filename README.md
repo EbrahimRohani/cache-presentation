@@ -18,9 +18,10 @@ The research content is still in progress. Current pages contain explicit TODO p
 | 2 | Framework Discovery | `/framework-discovery` |
 | 3 | Ecosystem & Credibility | `/ecosystem-credibility` |
 | 4 | Feature Comparison | `/feature-comparison` |
-| 5 | Benchmark & Demo Analysis | `/benchmark-analysis` |
-| 6 | Developer Experience | `/developer-experience` |
-| 7 | Conclusion | `/conclusion` |
+| 5 | Cache Comparison | `/cache-comparison` |
+| 6 | Benchmark & Demo Analysis | `/benchmark-analysis` |
+| 7 | Developer Experience | `/developer-experience` |
+| 8 | Conclusion | `/conclusion` |
 
 Visiting `/` redirects to `/requirements`.
 
@@ -124,6 +125,9 @@ app/
     ecosystem-credibility/
       page.tsx
     feature-comparison/
+      page.tsx
+      ...local components and data
+    cache-comparison/
       page.tsx
       ...local components and data
     benchmark-analysis/
