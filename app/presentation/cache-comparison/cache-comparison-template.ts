@@ -1,3 +1,72 @@
+export const heroSignals = [
+  {
+    label: "Default freshness",
+    value: "Revalidate",
+    description: "Navigation and successful actions refresh matched loaders.",
+  },
+  {
+    label: "Router memory",
+    value: "Transient",
+    description: "loaderData lives in active router state, not durable storage.",
+  },
+  {
+    label: "Durable cache",
+    value: "External",
+    description: "HTTP, CDN, data-source, or browser storage owns persistence.",
+  },
+  {
+    label: "RSC verdict",
+    value: "Conditional",
+    description: "Cache public deterministic payloads with explicit keys.",
+  },
+] as const;
+
+export const cacheMapNodes = [
+  {
+    title: "Browser",
+    detail: "Requests, hydrates, navigates",
+  },
+  {
+    title: "Router state",
+    detail: "loaderData in memory",
+  },
+  {
+    title: "Server loaders",
+    detail: "Request-scoped truth",
+  },
+  {
+    title: "Cache owner",
+    detail: "CDN, Redis, KV, browser",
+  },
+] as const;
+
+export const executiveTakeaways = [
+  {
+    title: "React Router optimizes freshness first",
+    body: "It reloads the data that matters after route changes and router-managed mutations. That keeps the UI honest, but it is not the same as a persistent cache.",
+  },
+  {
+    title: "Cache policy belongs at the layer that can enforce it",
+    body: "Public output belongs behind Cache-Control and a CDN. Expensive computation belongs near the data source. User-specific data should stay private.",
+  },
+  {
+    title: "Next.js has more framework-managed cache primitives",
+    body: "React Router gives lower-level control. Next's App Router includes integrated output caching, ISR, and tag/path invalidation semantics.",
+  },
+] as const;
+
+export const freshnessNotes = [
+  "Form, useSubmit, and fetcher actions automatically trigger page data revalidation after success.",
+  "shouldRevalidate is a route-level escape hatch. It keeps current data, so it must be used deliberately.",
+  "External mutations need their own invalidation signal: explicit revalidation, cache purge, webhook, or subscription.",
+] as const;
+
+export const rscCdnRules = [
+  "Public and deterministic responses can enter a shared cache.",
+  "HTML, RSC payloads, URLs, and request variants need distinct cache keys.",
+  "TTL, tags, purges, and invalidation are owned by the CDN or application.",
+] as const;
+
 export const ssrDocumentFlow = [
   {
     number: "01",

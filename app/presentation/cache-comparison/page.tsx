@@ -3,9 +3,13 @@ import type { ReactNode } from "react";
 import { SectionPage } from "../shared/section-page";
 import {
   backForwardFacts,
+  cacheMapNodes,
   cacheSources,
   clientNavigationFlow,
+  executiveTakeaways,
   externalCacheLayers,
+  freshnessNotes,
+  heroSignals,
   isrFlow,
   loaderDataLocations,
   manifestFacts,
@@ -13,11 +17,20 @@ import {
   prefetchModes,
   prerenderFlow,
   rscComparison,
+  rscCdnRules,
   rscRequestFlow,
   ssrDocumentFlow,
 } from "./cache-comparison-template";
 
+const cacheMapNodeTones = [
+  "border-cyan-200/40 bg-cyan-300/10 text-cyan-50",
+  "border-emerald-200/50 bg-emerald-300/15 text-emerald-50",
+  "border-amber-200/50 bg-amber-300/15 text-amber-50",
+  "border-fuchsia-200/40 bg-fuchsia-300/10 text-fuchsia-50",
+] as const;
+
 interface TopicHeadingProps {
+  readonly headingId: string;
   readonly number: string;
   readonly eyebrow: string;
   readonly title: string;
@@ -25,25 +38,25 @@ interface TopicHeadingProps {
 }
 
 function TopicHeading({
+  headingId,
   number,
   eyebrow,
   title,
   description,
 }: TopicHeadingProps) {
   return (
-    <div className="flex flex-col gap-4 border-b border-border pb-5 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
-      <div className="flex items-start gap-4">
-        <span className="mt-0.5 rounded-full bg-heading px-3 py-1 font-mono text-xs font-semibold text-on-accent">
-          {number}
-        </span>
-        <div>
-          <p className="text-xs font-bold tracking-[0.16em] text-accent uppercase">
-            {eyebrow}
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-heading sm:text-3xl">
-            {title}
-          </h2>
-        </div>
+    <div className="grid gap-4 border-b border-border pb-5 lg:grid-cols-[auto_minmax(0,0.8fr)_minmax(18rem,0.7fr)] lg:items-end">
+      <span className="w-fit rounded-lg bg-heading px-3 py-1 font-mono text-xs font-semibold text-on-accent">
+        {number}
+      </span>
+      <div>
+        <p className="text-xs font-bold text-accent uppercase">{eyebrow}</p>
+        <h2
+          id={headingId}
+          className="mt-2 max-w-3xl text-2xl font-semibold text-heading sm:text-3xl"
+        >
+          {title}
+        </h2>
       </div>
       <p className="max-w-2xl text-sm leading-6 text-muted lg:text-right">
         {description}
@@ -53,38 +66,56 @@ function TopicHeading({
 }
 
 interface FlowProps {
+  readonly title: string;
+  readonly caption: string;
   readonly items: readonly {
     readonly number: string;
     readonly title: string;
     readonly description: string;
   }[];
+  readonly variant: "cyan" | "emerald";
 }
 
-function Flow({ items }: FlowProps) {
+function FlowLane({ title, caption, items, variant }: FlowProps) {
+  const accent =
+    variant === "cyan"
+      ? "border-cyan-500 bg-cyan-50 text-cyan-800"
+      : "border-emerald-500 bg-emerald-50 text-emerald-800";
+
   return (
-    <ol className="grid list-none gap-3 p-0 lg:grid-cols-4">
-      {items.map((item, index) => (
-        <li key={item.number} className="contents">
-          <div className="relative rounded-2xl border border-border bg-surface p-5 shadow-sm">
-            <p className="font-mono text-xs font-semibold text-accent">
-              {item.number}
-            </p>
-            <h3 className="mt-4 font-semibold text-heading">{item.title}</h3>
-            <p className="mt-2 text-sm leading-6 text-muted">
-              {item.description}
-            </p>
-            {index < items.length - 1 ? (
-              <span
-                aria-hidden="true"
-                className="absolute top-1/2 -right-3 z-10 hidden -translate-y-1/2 rounded-full border border-border bg-canvas px-1.5 text-sm text-muted lg:block"
-              >
-                →
+    <article className="rounded-lg border border-border bg-surface p-5 shadow-sm sm:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-heading">{title}</h3>
+          <p className="mt-1 text-sm leading-6 text-muted">{caption}</p>
+        </div>
+        <span
+          className={`w-fit rounded-md border px-2.5 py-1 font-mono text-xs font-semibold ${accent}`}
+        >
+          {items.length} steps
+        </span>
+      </div>
+      <ol className="mt-5 grid list-none gap-3 p-0">
+        {items.map((item, index) => (
+          <li key={item.number} className="grid grid-cols-[auto_1fr] gap-3">
+            <div className="flex flex-col items-center">
+              <span className="rounded-md bg-heading px-2 py-1 font-mono text-xs font-semibold text-on-accent">
+                {item.number}
               </span>
-            ) : null}
-          </div>
-        </li>
-      ))}
-    </ol>
+              {index < items.length - 1 ? (
+                <span className="my-1 h-full w-px min-h-8 bg-border" />
+              ) : null}
+            </div>
+            <div className="min-w-0 pb-4">
+              <h4 className="font-semibold text-heading">{item.title}</h4>
+              <p className="mt-1 text-sm leading-6 text-muted">
+                {item.description}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </article>
   );
 }
 
@@ -95,108 +126,268 @@ interface CodePanelProps {
 
 function CodePanel({ label, children }: CodePanelProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-heading bg-heading shadow-sm">
-      <p className="border-b border-white/15 px-5 py-3 font-mono text-xs font-semibold tracking-[0.1em] text-on-accent/60 uppercase">
+    <div className="overflow-hidden rounded-lg border border-[#15243a] bg-[#0c1728] shadow-sm">
+      <p className="border-b border-white/10 px-5 py-3 font-mono text-xs font-semibold text-cyan-100/75 uppercase">
         {label}
       </p>
-      <pre className="overflow-x-auto p-5 text-sm leading-7 text-on-accent">
+      <pre className="overflow-x-auto p-5 text-sm leading-7 text-slate-50">
         <code>{children}</code>
       </pre>
     </div>
   );
 }
 
-export default function CacheComparisonPage() {
+function HeroCacheMap() {
   return (
-    <SectionPage>
-      <header className="max-w-5xl">
-        <p className="text-sm font-bold tracking-[0.16em] text-accent uppercase">
-          Request-to-cache lifecycle
-        </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-heading sm:text-5xl lg:text-6xl">
-          Caching in React Router
-        </h1>
-        <p className="mt-5 max-w-4xl text-lg leading-8 text-body sm:text-xl sm:leading-9">
-          Follow the data from the first SSR document through navigation,
-          revalidation, pre-rendering, RSC, CDN caching, and browser history.
-        </p>
-      </header>
-
-      <section className="grid gap-5" aria-labelledby="ssr-heading">
-        <TopicHeading
-          number="01"
-          eyebrow="SSR and navigation"
-          title="Two request paths, one route model"
-          description="The first visit returns a document. An in-app navigation fetches route data and renders in place."
-        />
-
+    <div className="rounded-lg border border-white/15 bg-white/[0.06] p-4 shadow-2xl shadow-black/20 backdrop-blur sm:p-5">
+      <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
-          <h3 id="ssr-heading" className="mb-4 text-lg font-semibold text-heading">
-            Initial SSR document
-          </h3>
-          <Flow items={ssrDocumentFlow} />
+          <p className="text-xs font-semibold text-cyan-100/70 uppercase">
+            Request-to-cache map
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-white">
+            Who owns freshness?
+          </h2>
         </div>
+        <span className="rounded-md bg-emerald-300 px-2.5 py-1 font-mono text-xs font-bold text-[#102033]">
+          SSR ON
+        </span>
+      </div>
 
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-heading">
-            Subsequent client navigation
-          </h3>
-          <Flow items={clientNavigationFlow} />
-        </div>
-
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-7">
-            <p className="text-xs font-bold tracking-[0.14em] text-accent uppercase">
-              Framework Mode default
-            </p>
-            <p className="mt-3 text-lg font-semibold leading-8 text-heading">
-              With SSR enabled, route loaders are revalidated after every
-              navigation and form submission.
-            </p>
-            <p className="mt-3 text-sm leading-6 text-muted">
-              The client navigation does not re-download the HTML document;
-              React Router automatically fetches server loader data and updates
-              the current route tree.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-accent bg-surface-raised p-6 sm:p-7">
-            <p className="font-mono text-sm font-semibold text-accent">
-              shouldRevalidate(args)
-            </p>
-            <p className="mt-3 text-sm leading-6 text-body">
-              Returning <code className="font-mono font-semibold">false</code>{" "}
-              opts that route out of the next revalidation and keeps its current
-              loader data. It is a freshness decision—not a new cache layer—and
-              does not skip the initial document loader.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-5" aria-labelledby="loader-data-heading">
-        <TopicHeading
-          number="02"
-          eyebrow="Data ownership"
-          title="Where loader data actually lives"
-          description="loaderData is transient router state. Persistent reuse requires a cache outside that state."
+      <div className="relative mt-5 grid gap-3 sm:grid-cols-4">
+        <span
+          aria-hidden="true"
+          className="absolute top-1/2 left-6 right-6 hidden h-px bg-white/20 sm:block"
         />
+        {cacheMapNodes.map((node, index) => {
+          const tone = cacheMapNodeTones[index] ?? cacheMapNodeTones[0];
 
-        <dl id="loader-data-heading" className="grid gap-4 lg:grid-cols-3">
-          {loaderDataLocations.map((item) => (
+          return (
             <div
-              key={item.label}
-              className="rounded-2xl border border-border bg-surface p-6 shadow-sm"
+              key={node.title}
+              className={`relative min-w-0 rounded-lg border p-4 ${tone}`}
             >
-              <dt className="text-xs font-bold tracking-[0.14em] text-accent uppercase">
-                {item.label}
-              </dt>
-              <dd className="mt-3 text-sm leading-6 text-body">{item.value}</dd>
+              <p className="font-mono text-xs font-semibold opacity-80">
+                {String(index + 1).padStart(2, "0")}
+              </p>
+              <h3 className="mt-7 text-lg font-semibold text-white sm:mt-10">
+                {node.title}
+              </h3>
+              <p className="mt-2 text-sm leading-5 text-white/70">
+                {node.detail}
+              </p>
             </div>
-          ))}
-        </dl>
+          );
+        })}
+      </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(22rem,0.8fr)_minmax(0,1.2fr)]">
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-lg border border-white/10 bg-black/15 p-3">
+          <p className="font-mono text-xs font-semibold text-cyan-100">
+            document
+          </p>
+          <p className="mt-1 text-sm text-white/70">HTML + hydration data</p>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-black/15 p-3">
+          <p className="font-mono text-xs font-semibold text-emerald-100">
+            navigation
+          </p>
+          <p className="mt-1 text-sm text-white/70">route data, no full HTML</p>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-black/15 p-3">
+          <p className="font-mono text-xs font-semibold text-amber-100">
+            mutation
+          </p>
+          <p className="mt-1 text-sm text-white/70">action, then revalidate</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="relative isolate overflow-hidden bg-[#0d1726] px-5 py-8 text-white sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,#0d1726_0%,#123554_42%,#0f766e_100%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 opacity-25 [background-image:linear-gradient(rgba(255,255,255,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:42px_42px]"
+      />
+
+      <div className="mx-auto grid w-full max-w-[90rem] gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(32rem,1.08fr)] lg:items-center">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-cyan-100 uppercase">
+            Cache comparison
+          </p>
+          <h1 className="mt-4 max-w-4xl text-4xl font-semibold text-white sm:text-5xl lg:text-6xl">
+            React Router caching, without the fog.
+          </h1>
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl sm:leading-9">
+            The router keeps navigation fresh. Durable reuse comes from the
+            layers around it: HTTP policy, CDN behavior, server-side caches, and
+            explicit browser storage.
+          </p>
+
+          <dl className="mt-7 grid gap-3 sm:grid-cols-2">
+            {heroSignals.map((signal) => (
+              <div
+                key={signal.label}
+                className="rounded-lg border border-white/10 bg-white/[0.07] p-4"
+              >
+                <dt className="text-xs font-semibold text-cyan-100/80 uppercase">
+                  {signal.label}
+                </dt>
+                <dd className="mt-2 text-2xl font-semibold text-white">
+                  {signal.value}
+                </dd>
+                <dd className="mt-1 text-sm leading-6 text-slate-200">
+                  {signal.description}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <HeroCacheMap />
+      </div>
+    </section>
+  );
+}
+
+function ExecutiveRead() {
+  return (
+    <section className="grid gap-5" aria-labelledby="executive-read-heading">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-stretch">
+        <div className="rounded-lg bg-heading p-6 text-on-accent shadow-sm sm:p-7">
+          <p className="text-xs font-bold text-cyan-100 uppercase">
+            Manager takeaway
+          </p>
+          <h2
+            id="executive-read-heading"
+            className="mt-3 text-3xl font-semibold text-white"
+          >
+            loaderData is fast state, not a cache strategy.
+          </h2>
+          <p className="mt-4 text-sm leading-6 text-slate-200">
+            Treat React Router as the orchestration layer. Put persistence,
+            TTLs, shared reuse, and invalidation in the layer that can guarantee
+            them.
+          </p>
+        </div>
+
+        <div className="grid gap-3 lg:grid-cols-3">
+          {executiveTakeaways.map((takeaway) => (
+            <article
+              key={takeaway.title}
+              className="rounded-lg border border-border bg-surface p-5 shadow-sm"
+            >
+              <h3 className="text-lg font-semibold text-heading">
+                {takeaway.title}
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-muted">
+                {takeaway.body}
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RequestLanes() {
+  return (
+    <section className="grid gap-5" aria-labelledby="request-lanes-heading">
+      <TopicHeading
+        headingId="request-lanes-heading"
+        number="01"
+        eyebrow="SSR and navigation"
+        title="Two request lanes, one route model"
+        description="The first visit returns a document. Client navigation fetches route data and renders in place."
+      />
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <FlowLane
+          title="Initial SSR document"
+          caption="The server resolves the route branch before the browser becomes interactive."
+          items={ssrDocumentFlow}
+          variant="cyan"
+        />
+        <FlowLane
+          title="Subsequent client navigation"
+          caption="The app stays mounted while the router fetches the next route's data."
+          items={clientNavigationFlow}
+          variant="emerald"
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.72fr)]">
+        <div className="rounded-lg border border-border bg-surface p-5 shadow-sm sm:p-6">
+          <p className="text-xs font-bold text-accent uppercase">
+            Framework Mode default
+          </p>
+          <p className="mt-3 text-xl font-semibold leading-8 text-heading">
+            With SSR enabled, route loaders revalidate after every navigation
+            and form submission.
+          </p>
+          <p className="mt-3 text-sm leading-6 text-muted">
+            Client navigation avoids another full HTML document, but it still
+            asks the server for fresh loader data and commits the new route
+            state.
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-5 shadow-sm sm:p-6">
+          <p className="font-mono text-sm font-semibold text-amber-900">
+            shouldRevalidate(args)
+          </p>
+          <p className="mt-3 text-sm leading-6 text-amber-950">
+            Returning <code className="font-mono font-semibold">false</code>{" "}
+            keeps current loader data for that route. It is a freshness decision,
+            not a new cache layer, and it does not skip the initial document
+            loader.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CacheOwnership() {
+  return (
+    <section className="grid gap-5" aria-labelledby="cache-ownership-heading">
+      <TopicHeading
+        headingId="cache-ownership-heading"
+        number="02"
+        eyebrow="Data ownership"
+        title="Put each cache in the layer that can police it"
+        description="loaderData is transient router state. Persistent reuse requires a cache outside that state."
+      />
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div className="grid gap-3">
+          {loaderDataLocations.map((item, index) => (
+            <article
+              key={item.label}
+              className="grid gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm sm:grid-cols-[auto_1fr] sm:items-start"
+            >
+              <span className="w-fit rounded-md bg-[#e9f7ef] px-2 py-1 font-mono text-xs font-semibold text-emerald-800">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-heading">{item.label}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  {item.value}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="grid gap-4">
           <CodePanel label="Public response policy">
             {`export function headers() {
   return {
@@ -211,160 +402,155 @@ export default function CacheComparisonPage() {
             {externalCacheLayers.map((layer) => (
               <article
                 key={layer.title}
-                className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
+                className="rounded-lg border border-border bg-surface p-4 shadow-sm"
               >
                 <h3 className="font-semibold text-heading">{layer.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">
                   {layer.description}
                 </p>
-                <p className="mt-4 font-mono text-xs leading-5 text-accent">
+                <p className="mt-4 break-words font-mono text-xs leading-5 text-accent">
                   {layer.examples}
                 </p>
               </article>
             ))}
           </div>
         </div>
+      </div>
 
-        <div className="rounded-xl border-l-4 border-l-heading bg-surface p-5 text-sm leading-6 text-body shadow-sm">
-          Loader/action headers are not automatically forwarded to the final
-          response. If the policy is derived inside a loader, return it from the
-          route module <code className="font-mono font-semibold">headers</code>{" "}
-          export. User-specific responses should normally use{" "}
-          <code className="font-mono font-semibold">private, no-store</code>.
-        </div>
-      </section>
+      <p className="rounded-lg border-l-4 border-l-heading bg-surface p-5 text-sm leading-6 text-body shadow-sm">
+        Loader/action headers are not automatically forwarded to the final
+        response. If policy is derived inside a loader, return it from the route
+        module <code className="font-mono font-semibold">headers</code> export.
+        User-specific responses should normally use{" "}
+        <code className="font-mono font-semibold">private, no-store</code>.
+      </p>
+    </section>
+  );
+}
 
-      <section className="grid gap-5" aria-labelledby="mutation-heading">
-        <TopicHeading
-          number="03"
-          eyebrow="Mutations"
-          title="Actions trigger automatic revalidation"
-          description="React Router treats the server as the source of truth and reloads page data after a successful router-managed mutation."
-        />
+function FreshnessEngine() {
+  return (
+    <section className="grid gap-5" aria-labelledby="freshness-heading">
+      <TopicHeading
+        headingId="freshness-heading"
+        number="03"
+        eyebrow="Freshness machinery"
+        title="Mutations, revalidation, and prefetch are one story"
+        description="React Router keeps the UI synchronized by reloading page data after router-managed writes and by letting likely destinations warm up early."
+      />
 
-        <ol
-          id="mutation-heading"
-          className="grid list-none overflow-hidden rounded-2xl border border-border bg-surface p-0 shadow-sm lg:grid-cols-5"
-        >
-          {mutationFlow.map((step, index) => (
-            <li
-              key={step}
-              className="relative border-b border-border p-5 last:border-b-0 lg:border-r lg:border-b-0 lg:last:border-r-0"
-            >
-              <p className="font-mono text-xs font-semibold text-accent">
-                {String(index + 1).padStart(2, "0")}
-              </p>
-              <p className="mt-3 text-sm font-semibold leading-6 text-heading">
-                {step}
-              </p>
-            </li>
-          ))}
-        </ol>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <p className="rounded-xl bg-heading p-5 text-sm leading-6 text-on-accent">
-            Applies to successful actions submitted through Form, useSubmit, or
-            fetcher APIs.
-          </p>
-          <p className="rounded-xl border border-border bg-surface p-5 text-sm leading-6 text-body">
-            shouldRevalidate can opt individual routes out, so it must be used
-            carefully to avoid stale UI.
-          </p>
-          <p className="rounded-xl border border-border bg-surface p-5 text-sm leading-6 text-body">
-            An external mutation unknown to the router needs explicit
-            revalidation or another invalidation signal.
-          </p>
-        </div>
-      </section>
-
-      <section className="grid gap-5" aria-labelledby="prefetch-heading">
-        <TopicHeading
-          number="04"
-          eyebrow="Prefetch"
-          title="Load route modules and data before the click"
-          description="The Link prefetch strategy controls when React Router emits prefetch hints for the destination."
-        />
-
-        <div
-          id="prefetch-heading"
-          className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm"
-        >
-          <div className="hidden grid-cols-[0.5fr_0.8fr_1.7fr] border-b border-border bg-surface-raised text-xs font-bold tracking-[0.12em] text-muted uppercase sm:grid">
-            <p className="p-4">Value</p>
-            <p className="border-l border-border p-4">Trigger</p>
-            <p className="border-l border-border p-4">When to use it</p>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)]">
+        <div className="rounded-lg border border-border bg-surface shadow-sm">
+          <div className="border-b border-border p-5 sm:p-6">
+            <p className="text-xs font-bold text-accent uppercase">
+              Action lifecycle
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold text-heading">
+              A write completes, then the page data catches up.
+            </h3>
           </div>
-          <dl>
-            {prefetchModes.map((mode) => (
-              <div
-                key={mode.value}
-                className="grid gap-3 border-b border-border p-4 last:border-b-0 sm:grid-cols-[0.5fr_0.8fr_1.7fr] sm:gap-0 sm:p-0"
+          <ol className="grid list-none p-0 lg:grid-cols-5">
+            {mutationFlow.map((step, index) => (
+              <li
+                key={step}
+                className="min-w-0 border-b border-border p-5 last:border-b-0 lg:border-r lg:border-b-0 lg:last:border-r-0"
               >
-                <dt className="font-mono text-sm font-semibold text-accent sm:p-4">
-                  {mode.value}
-                </dt>
-                <dd className="text-sm font-semibold text-heading sm:border-l sm:border-border sm:p-4">
-                  {mode.trigger}
-                </dd>
-                <dd className="text-sm leading-6 text-muted sm:border-l sm:border-border sm:p-4">
-                  {mode.use}
-                </dd>
-              </div>
+                <p className="font-mono text-xs font-semibold text-accent">
+                  {String(index + 1).padStart(2, "0")}
+                </p>
+                <p className="mt-3 text-sm font-semibold leading-6 text-heading">
+                  {step}
+                </p>
+              </li>
             ))}
-          </dl>
+          </ol>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-2">
-          <CodePanel label="Link strategy">
-            {`<Link to="/products" prefetch="intent">
+        <div className="grid gap-3">
+          {freshnessNotes.map((note, index) => (
+            <p
+              key={note}
+              className={`rounded-lg p-4 text-sm leading-6 shadow-sm ${
+                index === 0
+                  ? "bg-heading font-semibold text-on-accent"
+                  : "border border-border bg-surface text-body"
+              }`}
+            >
+              {note}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(22rem,0.72fr)_minmax(0,1.28fr)]">
+        <CodePanel label="Link strategy">
+          {`<Link to="/products" prefetch="intent">
   Products
 </Link>`}
-          </CodePanel>
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <h3 className="font-semibold text-heading">
-              Discovery is not prefetch
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-muted">
-              The default <code className="font-mono">discover="render"</code>{" "}
-              fetches route metadata from the manifest so the router knows what
-              to load. The <code className="font-mono">prefetch</code> prop goes
-              further and requests destination data and modules. Use{" "}
-              <code className="font-mono">PrefetchPageLinks</code> for explicit
-              programmatic page prefetching.
-            </p>
-          </div>
+        </CodePanel>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {prefetchModes.map((mode) => (
+            <article
+              key={mode.value}
+              className="rounded-lg border border-border bg-surface p-4 shadow-sm"
+            >
+              <p className="font-mono text-sm font-semibold text-accent">
+                {mode.value}
+              </p>
+              <h3 className="mt-3 font-semibold text-heading">
+                {mode.trigger}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted">{mode.use}</p>
+            </article>
+          ))}
         </div>
-      </section>
+      </div>
 
-      <section className="grid gap-5" aria-labelledby="prerender-heading">
-        <TopicHeading
-          number="05"
-          eyebrow="Pre-rendering and ISR"
-          title="Build-time data is a static artifact"
-          description="Pre-rendering removes runtime work for selected URLs, but the generated files do not regenerate themselves."
-        />
+      <p className="rounded-lg border border-cyan-200 bg-cyan-50 p-5 text-sm leading-6 text-cyan-950 shadow-sm">
+        Discovery is not prefetch:{" "}
+        <code className="font-mono font-semibold">discover="render"</code>{" "}
+        fetches route metadata from the manifest;{" "}
+        <code className="font-mono font-semibold">prefetch</code> requests
+        destination data and modules.
+      </p>
+    </section>
+  );
+}
 
-        <div id="prerender-heading" className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="grid gap-4">
-            {prerenderFlow.map((step) => (
-              <article
-                key={step.number}
-                className="grid grid-cols-[auto_1fr] gap-4 rounded-2xl border border-border bg-surface p-5 shadow-sm"
-              >
-                <span className="font-mono text-sm font-semibold text-accent">
-                  {step.number}
-                </span>
-                <div>
-                  <h3 className="font-semibold text-heading">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    {step.description}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-          <CodePanel label="react-router.config.ts">
-            {`export default {
+function StaticAndEdge() {
+  return (
+    <section className="grid gap-5" aria-labelledby="static-edge-heading">
+      <TopicHeading
+        headingId="static-edge-heading"
+        number="04"
+        eyebrow="Static output and edge cache"
+        title="Pre-rendering is an artifact; ISR needs an origin"
+        description="React Router can emit static documents and data payloads, but regeneration requires runtime infrastructure."
+      />
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div className="grid gap-4">
+          {prerenderFlow.map((step) => (
+            <article
+              key={step.number}
+              className="grid grid-cols-[auto_1fr] gap-4 rounded-lg border border-border bg-surface p-5 shadow-sm"
+            >
+              <span className="font-mono text-sm font-semibold text-accent">
+                {step.number}
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-heading">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  {step.description}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <CodePanel label="react-router.config.ts">
+          {`export default {
   ssr: true,
   async prerender({ getStaticPaths }) {
     const slugs = await getProductSlugs();
@@ -374,190 +560,188 @@ export default function CacheComparisonPage() {
     ];
   },
 };`}
-          </CodePanel>
-        </div>
+        </CodePanel>
+      </div>
 
-        <div className="rounded-2xl border border-accent bg-surface p-6 shadow-sm sm:p-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:items-start">
-            <div>
-              <p className="text-xs font-bold tracking-[0.16em] text-accent uppercase">
-                ISR-like architecture
-              </p>
-              <h3 className="mt-2 text-2xl font-semibold tracking-tight text-heading">
-                SSR origin + CDN stale-while-revalidate
-              </h3>
-              <p className="mt-4 text-sm leading-6 text-muted">
-                React Router has no built-in Next-style ISR store. The common
-                equivalent lets a CDN serve stale output while a runtime SSR
-                request regenerates the next response.
-              </p>
-            </div>
-            <ol className="grid list-none gap-2 p-0">
-              {isrFlow.map((step, index) => (
-                <li
-                  key={step}
-                  className="flex items-start gap-3 rounded-xl bg-surface-raised px-4 py-3"
-                >
-                  <span className="font-mono text-xs font-semibold text-accent">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="text-sm leading-6 text-body">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-          <p className="mt-6 border-t border-border pt-5 text-sm font-semibold leading-6 text-heading">
-            Important: if the origin only serves the same pre-rendered static
-            file, CDN revalidation receives the same old build. Real regeneration
-            needs a runtime SSR handler, a persistent application cache, a host
-            adapter, or a rebuild/webhook. Keep document and .data variants on
-            the same freshness policy.
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
+        <div className="rounded-lg border border-emerald-300 bg-[#f1fbf6] p-6 shadow-sm sm:p-7">
+          <p className="text-xs font-bold text-emerald-800 uppercase">
+            ISR-like architecture
+          </p>
+          <h3 className="mt-2 text-2xl font-semibold text-heading">
+            SSR origin + CDN stale-while-revalidate
+          </h3>
+          <p className="mt-4 text-sm leading-6 text-muted">
+            React Router has no built-in Next-style ISR store. The usual
+            equivalent lets a CDN serve stale output while a runtime SSR request
+            prepares the next response.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-surface shadow-sm">
-          <div className="border-b border-border p-6 sm:p-7">
-            <p className="text-xs font-bold tracking-[0.16em] text-accent uppercase">
-              Route manifest
+        <ol className="grid list-none gap-2 p-0">
+          {isrFlow.map((step, index) => (
+            <li
+              key={step}
+              className="grid grid-cols-[auto_1fr] gap-3 rounded-lg border border-border bg-surface px-4 py-3 shadow-sm"
+            >
+              <span className="font-mono text-xs font-semibold text-accent">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="text-sm leading-6 text-body">{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <p className="rounded-lg bg-heading p-5 text-sm font-semibold leading-6 text-on-accent shadow-sm">
+        Important: if the origin only serves the same pre-rendered static file,
+        CDN revalidation receives the same old build. Real regeneration needs a
+        runtime SSR handler, persistent application cache, host adapter, or
+        rebuild/webhook.
+      </p>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(18rem,0.65fr)_minmax(0,1.35fr)]">
+        <div className="rounded-lg border border-border bg-surface p-5 shadow-sm">
+          <p className="text-xs font-bold text-accent uppercase">
+            Route manifest
+          </p>
+          <h3 className="mt-2 text-2xl font-semibold text-heading">
+            Metadata for discovery, not loader data
+          </h3>
+          <p className="mt-4 text-sm leading-6 text-muted">
+            Keep document, data, and manifest variants on deliberate freshness
+            policies.
+          </p>
+        </div>
+        <dl className="grid gap-3 sm:grid-cols-2">
+          {manifestFacts.map((fact) => (
+            <div
+              key={fact.label}
+              className="rounded-lg border border-border bg-surface p-5 shadow-sm"
+            >
+              <dt className="text-xs font-bold text-accent uppercase">
+                {fact.label}
+              </dt>
+              <dd className="mt-3 text-sm leading-6 text-body">
+                {fact.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+function RscComparison() {
+  return (
+    <section className="grid gap-5" aria-labelledby="rsc-heading">
+      <TopicHeading
+        headingId="rsc-heading"
+        number="05"
+        eyebrow="React Server Components"
+        title="RSC changes the payload, not the cache owner"
+        description="React Router RSC can use a CDN, but cacheability must be designed at the HTTP and platform layers."
+      />
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {rscRequestFlow.map((item) => (
+          <article
+            key={item.title}
+            className="rounded-lg border border-border bg-surface p-5 shadow-sm"
+          >
+            <h3 className="font-semibold text-heading">{item.title}</h3>
+            <p className="mt-3 text-sm leading-6 text-muted">
+              {item.description}
             </p>
-            <h3 className="mt-2 text-2xl font-semibold tracking-tight text-heading">
-              Metadata for discovery—not loader data
+          </article>
+        ))}
+      </div>
+
+      <div className="rounded-lg border border-fuchsia-200 bg-[#fff7fb] p-6 shadow-sm sm:p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-fuchsia-800 uppercase">
+              Can React Router RSC be cached on a CDN?
+            </p>
+            <h3 className="mt-3 text-2xl font-semibold text-heading">
+              Yes, conditionally, through HTTP caching.
             </h3>
           </div>
-          <dl className="grid sm:grid-cols-2">
-            {manifestFacts.map((fact, index) => (
+          <span className="w-fit rounded-md bg-heading px-3 py-1 font-mono text-xs font-semibold text-on-accent">
+            RSC MODE: UNSTABLE
+          </span>
+        </div>
+        <ul className="mt-6 grid list-none gap-3 p-0 lg:grid-cols-3">
+          {rscCdnRules.map((rule) => (
+            <li
+              key={rule}
+              className="rounded-lg border border-fuchsia-100 bg-white p-4 text-sm leading-6 text-body shadow-sm"
+            >
+              {rule}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border border-border bg-surface shadow-sm">
+        <div className="min-w-[48rem]">
+          <div className="grid grid-cols-[0.68fr_1fr_1fr] border-b border-border bg-surface-raised text-xs font-bold text-muted uppercase">
+            <p className="p-4">Criterion</p>
+            <p className="border-l border-border p-4">React Router RSC</p>
+            <p className="border-l border-border p-4">
+              Next.js App Router RSC
+            </p>
+          </div>
+          <dl>
+            {rscComparison.map((row) => (
               <div
-                key={fact.label}
-                className={`p-6 sm:p-7 ${
-                  index % 2 === 1 ? "sm:border-l sm:border-border" : ""
-                } ${index > 1 ? "border-t border-border" : ""}`}
+                key={row.criterion}
+                className="grid grid-cols-[0.68fr_1fr_1fr] border-b border-border last:border-b-0"
               >
-                <dt className="text-xs font-bold tracking-[0.14em] text-accent uppercase">
-                  {fact.label}
+                <dt className="p-4 text-sm font-semibold leading-6 text-heading">
+                  {row.criterion}
                 </dt>
-                <dd className="mt-3 text-sm leading-6 text-body">
-                  {fact.value}
+                <dd className="border-l border-border p-4 text-sm leading-6 text-body">
+                  {row.reactRouter}
+                </dd>
+                <dd className="border-l border-border p-4 text-sm leading-6 text-body">
+                  {row.nextJs}
                 </dd>
               </div>
             ))}
           </dl>
-          <div className="grid gap-3 border-t border-border bg-surface-raised p-5 text-sm leading-6 text-muted sm:grid-cols-2 sm:p-6">
-            <p>
-              <strong className="text-heading">/products.data:</strong> loader
-              payload generated by running application code.
-            </p>
-            <p>
-              <strong className="text-heading">/__manifest:</strong> route and
-              asset metadata generated by the compiler. Cache it with both{" "}
-              <code className="font-mono">version</code> and{" "}
-              <code className="font-mono">paths</code> in the cache key.
-            </p>
-          </div>
         </div>
-      </section>
+      </div>
 
-      <section className="grid gap-5" aria-labelledby="rsc-heading">
-        <TopicHeading
-          number="06"
-          eyebrow="React Server Components"
-          title="RSC changes the payload—not the cache owner"
-          description="React Router RSC can use a CDN, but cacheability must be designed at the HTTP and platform layers."
-        />
+      <p className="rounded-lg border-l-4 border-l-accent bg-surface p-5 text-sm leading-6 text-body shadow-sm">
+        In Next.js today, a CDN must respect Cache-Control and keep RSC,
+        prefetch, and HTML variants separate, commonly through the{" "}
+        <code className="font-mono font-semibold">_rsc</code> cache key and
+        relevant request headers. Static/ISR responses are cacheable; dynamic
+        responses are normally private and no-store.
+      </p>
+    </section>
+  );
+}
 
-        <div id="rsc-heading" className="grid gap-4 lg:grid-cols-3">
-          {rscRequestFlow.map((item) => (
-            <article
-              key={item.title}
-              className="rounded-2xl border border-border bg-surface p-6 shadow-sm"
-            >
-              <h3 className="font-semibold text-heading">{item.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-muted">
-                {item.description}
-              </p>
-            </article>
-          ))}
-        </div>
-
-        <div className="rounded-2xl border border-accent bg-surface-raised p-6 sm:p-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
-            <div>
-              <p className="text-xs font-bold tracking-[0.16em] text-accent uppercase">
-                Can React Router RSC be cached on a CDN?
-              </p>
-              <p className="mt-3 text-2xl font-semibold tracking-tight text-heading">
-                Yes—conditionally, through HTTP caching.
-              </p>
-            </div>
-            <span className="w-fit rounded-full bg-heading px-3 py-1 font-mono text-xs font-semibold text-on-accent">
-              RSC MODE: UNSTABLE
-            </span>
-          </div>
-          <ul className="mt-6 grid list-none gap-3 p-0 lg:grid-cols-3">
-            <li className="rounded-xl bg-surface p-4 text-sm leading-6 text-body">
-              The response must be public and deterministic; private or
-              cookie-dependent output must not enter a shared cache.
-            </li>
-            <li className="rounded-xl bg-surface p-4 text-sm leading-6 text-body">
-              Cache keys must distinguish the HTML document, RSC payload, URL,
-              and any request inputs that change the response.
-            </li>
-            <li className="rounded-xl bg-surface p-4 text-sm leading-6 text-body">
-              React Router supplies no built-in persistent RSC cache, TTL, tag,
-              or path invalidation API; the CDN/application owns them.
-            </li>
-          </ul>
-        </div>
-
-        <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
-          <div className="min-w-[48rem]">
-            <div className="grid grid-cols-[0.7fr_1fr_1fr] border-b border-border bg-surface-raised text-xs font-bold tracking-[0.1em] text-muted uppercase">
-              <p className="p-4">Criterion</p>
-              <p className="border-l border-border p-4">React Router RSC</p>
-              <p className="border-l border-border p-4">Next.js App Router RSC</p>
-            </div>
-            <dl>
-              {rscComparison.map((row) => (
-                <div
-                  key={row.criterion}
-                  className="grid grid-cols-[0.7fr_1fr_1fr] border-b border-border last:border-b-0"
-                >
-                  <dt className="p-4 text-sm font-semibold leading-6 text-heading">
-                    {row.criterion}
-                  </dt>
-                  <dd className="border-l border-border p-4 text-sm leading-6 text-body">
-                    {row.reactRouter}
-                  </dd>
-                  <dd className="border-l border-border p-4 text-sm leading-6 text-body">
-                    {row.nextJs}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-
-        <p className="rounded-xl border-l-4 border-l-accent bg-surface p-5 text-sm leading-6 text-body shadow-sm">
-          In Next.js today, a CDN must respect Cache-Control and keep RSC,
-          prefetch, and HTML variants separate—commonly through the{" "}
-          <code className="font-mono font-semibold">_rsc</code> cache key and
-          relevant request headers. Static/ISR responses are cacheable; dynamic
-          responses are normally private and no-store.
-        </p>
-      </section>
-
+function HistoryAndSources() {
+  return (
+    <>
       <section className="grid gap-5" aria-labelledby="history-heading">
         <TopicHeading
-          number="07"
+          headingId="history-heading"
+          number="06"
           eyebrow="History navigation"
           title="Back/Forward is navigation, not a guaranteed data cache"
           description="Separate React Router's same-document POP navigation from the browser's full-document back/forward cache."
         />
 
-        <div id="history-heading" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {backForwardFacts.map((fact) => (
             <article
               key={fact.title}
-              className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
+              className="rounded-lg border border-border bg-surface p-5 shadow-sm"
             >
               <h3 className="font-semibold text-heading">{fact.title}</h3>
               <p className="mt-3 text-sm leading-6 text-muted">
@@ -567,17 +751,15 @@ export default function CacheComparisonPage() {
           ))}
         </div>
 
-        <p className="rounded-xl bg-heading p-5 text-sm font-semibold leading-6 text-on-accent sm:p-6">
+        <p className="rounded-lg bg-heading p-5 text-sm font-semibold leading-6 text-on-accent shadow-sm sm:p-6">
           ScrollRestoration can restore scroll position for Back/Forward. It
           does not restore or persist loader data.
         </p>
       </section>
 
-      <aside className="rounded-2xl border border-border bg-surface-raised p-6 sm:p-7">
-        <p className="text-xs font-bold tracking-[0.16em] text-accent uppercase">
-          Sources
-        </p>
-        <h2 className="mt-2 text-xl font-semibold tracking-tight text-heading sm:text-2xl">
+      <aside className="rounded-lg border border-border bg-surface-raised p-6 shadow-sm sm:p-7">
+        <p className="text-xs font-bold text-accent uppercase">Sources</p>
+        <h2 className="mt-2 text-xl font-semibold text-heading sm:text-2xl">
           Version-matched framework documentation
         </h2>
         <ul className="mt-5 grid list-none gap-x-8 gap-y-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
@@ -595,6 +777,24 @@ export default function CacheComparisonPage() {
           ))}
         </ul>
       </aside>
+    </>
+  );
+}
+
+export default function CacheComparisonPage() {
+  return (
+    <SectionPage className="!max-w-none !gap-9 !px-0 !py-0 lg:!gap-11">
+      <Hero />
+
+      <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-9 px-5 pb-8 sm:px-8 sm:pb-10 lg:gap-11 lg:px-12 lg:pb-14">
+        <ExecutiveRead />
+        <RequestLanes />
+        <CacheOwnership />
+        <FreshnessEngine />
+        <StaticAndEdge />
+        <RscComparison />
+        <HistoryAndSources />
+      </div>
     </SectionPage>
   );
 }

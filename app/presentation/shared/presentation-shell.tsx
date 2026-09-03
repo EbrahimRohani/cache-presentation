@@ -29,6 +29,9 @@ export function PresentationShell({ children }: PresentationShellProps) {
   }
 
   const { current, currentIndex, previous, next, total } = navigation;
+  const lastSectionNumber =
+    presentationSections[presentationSections.length - 1]?.number ??
+    String(total);
   const progress = ((currentIndex + 1) / total) * 100;
 
   return (
@@ -45,9 +48,9 @@ export function PresentationShell({ children }: PresentationShellProps) {
           </div>
           <p
             className="shrink-0 font-mono text-sm font-semibold tabular-nums text-muted"
-            aria-label={`Section ${currentIndex + 1} of ${total}`}
+            aria-label={`Section ${current.number} of ${lastSectionNumber}`}
           >
-            {currentIndex + 1} / {total}
+            {current.number} / {lastSectionNumber}
           </p>
         </div>
       </header>
@@ -101,7 +104,7 @@ export function PresentationShell({ children }: PresentationShellProps) {
             >
               {presentationSections.map((section, index) => (
                 <option key={section.id} value={section.path}>
-                  {index + 1}. {section.title}
+                  {section.number}. {section.title}
                 </option>
               ))}
             </select>
